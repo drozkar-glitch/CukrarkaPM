@@ -1,0 +1,61 @@
+name: iosApp
+options:
+  bundleIdPrefix: cz.mares
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: iosApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cz.mares.cukrarkapm
+        PRODUCT_NAME: CukrarkaPM
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_BITCODE: NO
+        FRAMEWORK_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+          - "$(SRCROOT)/../composeApp/build/bin/iosArm64/releaseFramework"
+          - "$(SRCROOT)/../composeApp/build/bin/iosArm64/debugFramework"
+          - "$(SRCROOT)/../composeApp/build/bin/iosSimulatorArm64/debugFramework"
+          - "$(SRCROOT)/../composeApp/build/bin/iosSimulatorArm64/releaseFramework"
+          - "$(SRCROOT)/../composeApp/build/bin/iosX64/debugFramework"
+          - "$(SRCROOT)/../composeApp/build/bin/iosX64/releaseFramework"
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "-framework"
+          - "ComposeApp"
+          - "-framework"
+          - "AVFoundation"
+          - "-framework"
+          - "CoreImage"
+          - "-framework"
+          - "QuartzCore"
+    info:
+      path: iosApp/Info.plist
+      properties:
+        CFBundleDisplayName: "Cukrářka PM"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleIconName: AppIcon
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        CADisableMinimumFrameDurationOnPhone: true
+        NSCameraUsageDescription: "Kamera slouží k rychlému načtení čárových kódů surovin a obalů při naskladnění."
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
