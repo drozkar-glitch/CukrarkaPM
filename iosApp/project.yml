@@ -14,10 +14,16 @@ targets:
     platform: iOS
     sources:
       - path: iosApp
+        excludes:
+          - "Info.plist"
+          - "signing/**"
+          - "*.entitlements"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cz.mares.cukrarkapm
         PRODUCT_NAME: CukrarkaPM
+        INFOPLIST_FILE: iosApp/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_BITCODE: NO
         FRAMEWORK_SEARCH_PATHS:
@@ -39,23 +45,3 @@ targets:
           - "CoreImage"
           - "-framework"
           - "QuartzCore"
-    info:
-      path: iosApp/Info.plist
-      properties:
-        CFBundleDisplayName: "Cukrářka PM"
-        CFBundleShortVersionString: "$(MARKETING_VERSION)"
-        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
-        CFBundleIconName: AppIcon
-        LSRequiresIPhoneOS: true
-        UILaunchScreen: {}
-        CADisableMinimumFrameDurationOnPhone: true
-        NSCameraUsageDescription: "Kamera slouží k rychlému načtení čárových kódů surovin a obalů při naskladnění."
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
-        UISupportedInterfaceOrientations~ipad:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
