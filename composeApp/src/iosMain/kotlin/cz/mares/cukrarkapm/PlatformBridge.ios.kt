@@ -54,20 +54,9 @@ import platform.AVFoundation.AVMetadataObjectTypeQRCode
 import platform.CoreGraphics.CGAffineTransformMakeScale
 import platform.CoreGraphics.CGImageRelease
 import platform.CoreGraphics.CGRectMake
-import platform.CoreImage.CIContext
-import platform.CoreImage.CIFilter
-import platform.Foundation.NSData
-import platform.Foundation.NSDate
-import platform.Foundation.NSHTTPURLResponse
-import platform.Foundation.NSMutableURLRequest
-import platform.Foundation.NSURL
-import platform.Foundation.NSURLSession
-import platform.Foundation.NSUserDefaults
-import platform.Foundation.dataWithBytes
-import platform.Foundation.setHTTPBody
-import platform.Foundation.setHTTPMethod
+import platform.CoreImage.*
+import platform.Foundation.*
 import platform.Foundation.setValue
-import platform.Foundation.timeIntervalSince1970
 import platform.UIKit.UIApplication
 import platform.UIKit.UIColor
 import platform.UIKit.UIImage
@@ -108,31 +97,40 @@ actual fun httpPozadavek(
             setValue("application/json; charset=UTF-8", forHTTPHeaderField = "Content-Type")
             val bajty = teloJson.encodeToByteArray()
             if (bajty.isNotEmpty()) {
-                val data = bajty.usePinned { pripichnuto ->
+                val dataTelo = bajty.usePinned { pripichnuto ->
                     NSData.dataWithBytes(pripichnuto.addressOf(0), bajty.size.toULong())
                 }
-                setHTTPBody(data)
+                setHTTPBody(dataTelo)
             }
         }
     }
 
-    NSURLSession.sharedSession.dataTaskWithRequest(pozadavek) { data, odpovedHttp, chyba ->
-        val stavovyKod = (odpovedHttp as? NSHTTPURLResponse)?.statusCode?.toInt() ?: 0
-        val ok = chyba == null && stavovyKod in 200..299
-        val text = if (data != null && data.length.toInt() > 0) {
-            val delka = data.length.toInt()
-            val pole = ByteArray(delka)
-            pole.usePinned { pripichnuto ->
-                memcpy(pripichnuto.addressOf(0), data.bytes, data.length)
+    val uloha = NSURLSession.sharedSession.dataTaskWithRequest(
+        request = pozadavek,
+        completionHandler = { data: NSData?, odpovedHttp: NSURLResponse?, chyba: NSError? ->
+            val stavovyKod = (odpovedHttp as? NSHTTPURLResponse)?.statusCode?.toInt() ?: 0
+            val ok = chyba == null && stavovyKod in 200..299
+            val text = if (data != null && data.length.toInt() > 0) {
+                val delka = data.length.toInt()
+                val zdrojBajtu = data.bytes
+                if (zdrojBajtu != null) {
+                    val pole = ByteArray(delka)
+                    pole.usePinned { pripichnuto ->
+                        memcpy(pripichnuto.addressOf(0), zdrojBajtu, data.length)
+                    }
+                    pole.decodeToString()
+                } else {
+                    ""
+                }
+            } else {
+                chyba?.localizedDescription.orEmpty()
             }
-            pole.decodeToString()
-        } else {
-            chyba?.localizedDescription.orEmpty()
+            dispatch_async(dispatch_get_main_queue()) {
+                vysledek(ok, text)
+            }
         }
-        dispatch_async(dispatch_get_main_queue()) {
-            vysledek(ok, text)
-        }
-    }.resume()
+    )
+    uloha.resume()
 }
 
 actual fun otevriSmsZpravu(telefon: String, textZpravy: String) {
@@ -175,7 +173,7 @@ actual fun PlatebniQrObrazek(spaydText: String, modifier: Modifier) {
                 }
                 val filtr = CIFilter.filterWithName("CIQRCodeGenerator")
                 filtr?.setValue(data, forKey = "inputMessage")
-                val vystup = filtr?.outputImage
+                val vystup: CIImage? = filtr?.outputImage
                 if (vystup != null) {
                     val zvetseny = vystup.imageByApplyingTransform(CGAffineTransformMakeScale(10.0, 10.0))
                     val kontext = CIContext.context()

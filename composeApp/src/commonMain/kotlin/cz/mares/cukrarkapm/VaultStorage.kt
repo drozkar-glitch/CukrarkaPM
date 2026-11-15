@@ -23,6 +23,17 @@ object VaultStorage {
     private const val KLIC_ULOZENY_PIN = "cukrarka_pin_v1"
     private const val KLIC_LOKALNI_TREZOR = "cukrarka_trezor_v1"
 
+    fun vytvorPrazdnaData(casMs: Long = aktualniCasMs()): DataCukrarny {
+        return DataCukrarny(
+            nastaveni = NastaveniCukrarny(),
+            sklad = emptyList(),
+            recepty = emptyList(),
+            klientky = emptyList(),
+            objednavky = emptyList(),
+            posledniUlozeniMs = casMs
+        )
+    }
+
     fun cistyKlicNicku(nick: String): String {
         val zaklad = nick.trim().lowercase()
         val sb = StringBuilder()
@@ -54,8 +65,8 @@ object VaultStorage {
         if (nick.isEmpty() || pin.isEmpty()) return null
         val ucet = UcetCukrarky(nick = nick, pin = pin, jeUkazkovyRezim = false)
         val zasifrovano = nactiLokalniText(KLIC_LOKALNI_TREZOR).orEmpty()
-        val desifrovano = if (zasifrovano.isNotEmpty()) desifrujText(zasifrovano, nick, pin) else null
-        val data = if (desifrovano != null) rozbalData(desifrovano) else VzorovaData.vytvorVychoziData()
+        val desifrovano = if (zasifrovano.isNotEmpty()) desifrujText(zasifrovano, cistyKlicNicku(nick), pin) else null
+        val data = if (desifrovano != null) rozbalData(desifrovano) else vytvorPrazdnaData()
         return ucet to data
     }
 
@@ -113,9 +124,9 @@ object VaultStorage {
                         return@httpPozadavek
                     }
                     val ucet = UcetCukrarky(nick = zadanyNick.trim(), pin = cistyPin, jeUkazkovyRezim = false)
-                    val vychozi = VzorovaData.vytvorVychoziData().copy(posledniUlozeniMs = cas)
-                    ulozRelaciAData(ucet, vychozi) {
-                        vysledek(VysledekAuth(TypVysledkuAuth.USPECH, "Cukrárna založena!", ucet, vychozi))
+                    val prazdnaCukrarna = vytvorPrazdnaData(cas)
+                    ulozRelaciAData(ucet, prazdnaCukrarna) {
+                        vysledek(VysledekAuth(TypVysledkuAuth.USPECH, "Cukrárna založena!", ucet, prazdnaCukrarna))
                     }
                 }
             } else {
@@ -132,7 +143,7 @@ object VaultStorage {
                     val cistyObsah = if (!zasifrovanyPayload.isNullOrBlank()) {
                         desifrujText(zasifrovanyPayload, klicNicku, cistyPin)
                     } else null
-                    val nactenaData = if (cistyObsah != null) rozbalData(cistyObsah) else VzorovaData.vytvorVychoziData()
+                    val nactenaData = if (cistyObsah != null) rozbalData(cistyObsah) else vytvorPrazdnaData()
                     ulozLokalniKopie(ucet, nactenaData)
                     vysledek(VysledekAuth(TypVysledkuAuth.USPECH, "Vítej zpátky!", ucet, nactenaData))
                 }
